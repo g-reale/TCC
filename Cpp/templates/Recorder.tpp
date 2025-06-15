@@ -3,7 +3,7 @@ Recorder<N>::Recorder(){
     
     pa_sample_spec sample_spec = {
         .format = PA_SAMPLE_FLOAT32,
-        .rate = 48000,
+        .rate = SAMPLE_RATE,
         .channels = 1
     };
 

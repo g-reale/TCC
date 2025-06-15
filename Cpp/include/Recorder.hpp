@@ -9,7 +9,7 @@
 #include <pulse/simple.h>
 #include <condition_variable>
 
-#include <iostream>
+#include "Constants.hpp"
 
 template<size_t N>
 class Recorder{
