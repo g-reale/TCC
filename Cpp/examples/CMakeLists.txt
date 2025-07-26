@@ -4,14 +4,12 @@ project(GoertzelGUI)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- Find Packages ---
 find_package(OpenGL REQUIRED)
 
 # Usar pkg-config para encontrar glfw3 corretamente no Debian
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
-# --- Executável principal ---
 add_executable(goertzel_gui
     main.cpp
 
@@ -28,9 +26,6 @@ add_executable(goertzel_gui
     # ImPlot
     ${CMAKE_SOURCE_DIR}/implot/implot.cpp
     ${CMAKE_SOURCE_DIR}/implot/implot_items.cpp
-
-    # Você pode incluir o demo se quiser:
-    # ${CMAKE_SOURCE_DIR}/implot/implot_demo.cpp
 )
 
 # --- Include Paths ---
@@ -44,9 +39,9 @@ target_include_directories(goertzel_gui PRIVATE
     ${CMAKE_SOURCE_DIR}/implot
 )
 
-# --- Linkagem ---
+
 target_link_libraries(goertzel_gui
     ${OPENGL_LIBRARIES}
     ${GLFW_LIBRARIES}
-    ${CMAKE_DL_LIBS}  # Necessário para GLAD ou OpenGL dinâmico
+    ${CMAKE_DL_LIBS} 
 )
