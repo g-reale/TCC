@@ -1,6 +1,31 @@
 template<size_t N>
-Recorder<N>::Recorder(){
-    
+Recorder<N>::Recorder(const std::string & source){
+    reset(source);
+}
+
+template<size_t N>
+Recorder<N>::~Recorder(){
+    clear();
+}
+
+template<size_t N>
+void Recorder<N>::clear(){
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        finished = true;
+        ready = true;
+    }
+    cv.notify_one();
+    if(worker.joinable())
+        worker.join();
+
+    if(pulse_audio_handle)
+        pa_simple_free(pulse_audio_handle);
+}
+
+template<size_t N>
+void Recorder<N>::reset(const std::string & source){
+    clear();
     pa_sample_spec sample_spec = {
         .format = PA_SAMPLE_FLOAT32,
         .rate = SAMPLE_RATE,
@@ -19,7 +44,7 @@ Recorder<N>::Recorder(){
         nullptr,
         "BAS",
         PA_STREAM_RECORD,
-        nullptr,
+        source.empty() ? nullptr : source.data(),
         "BAS input",
         &sample_spec,
         nullptr,
@@ -60,19 +85,6 @@ Recorder<N>::Recorder(){
             return;
         }
     );
-}
-
-template<size_t N>
-Recorder<N>::~Recorder(){
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        finished = true;
-        ready = true;
-    }
-    cv.notify_one();
-    if(worker.joinable())
-        worker.join();
-    pa_simple_free(pulse_audio_handle);
 }
 
 template<size_t N>

@@ -51,7 +51,7 @@ set(
         glad/src/glad.c
 )
 
-add_executable(${PROJECT_NAME} main.cpp src/Goertzel.cpp ${SRCIMGUI} ${SRCGLAD} ${SRCIMPLOT})
+add_executable(${PROJECT_NAME} main.cpp src/Goertzel.cpp src/BackEnd.cpp ${SRCIMGUI} ${SRCGLAD} ${SRCIMPLOT})
 target_link_libraries(${PROJECT_NAME} PRIVATE pulse-simple pulse ${GLFW_LIBRARIES} OpenGL::GL)
 target_include_directories(${PROJECT_NAME} PRIVATE include templates ${PULSEAUDIO_INCLUDE_DIRS} ${IIMGUI} ${GLFW_INCLUDE_DIRS} ${IIMPLOT})
 
