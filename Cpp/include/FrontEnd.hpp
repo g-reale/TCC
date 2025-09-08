@@ -55,7 +55,6 @@ namespace FrontEnd {
         // Páginas da interface
         static void showConfigurationPage();
         static void showVisualizationPage();
-        static void showAudioSourceSelection();
         static void showOverallVisualizationPage();
     };
 

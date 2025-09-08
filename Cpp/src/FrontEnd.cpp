@@ -116,12 +116,44 @@ std::vector<std::string> FrontEnd::Application::getAvailableAudioSources() {
 
 // Página de configuração de analisadores
 void FrontEnd::Application::showConfigurationPage() {
+    ImGui::Text("Seleção de Fonte de Áudio");
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (s_audio_sources.empty()) {
+        ImGui::Text("Nenhuma fonte de áudio disponível.");
+        return;
+    }
+
+    const char* current_source = s_audio_sources[s_selected_source_index].c_str();
+    if (ImGui::BeginCombo("##AudioSourceCombo", current_source)) {
+        for (int i = 0; i < s_audio_sources.size(); ++i) {
+            bool is_selected = (s_selected_source_index == i);
+            if (ImGui::Selectable(s_audio_sources[i].c_str(), is_selected)) {
+                s_selected_source_index = i;
+                setAudioSource(s_audio_sources[s_selected_source_index]);
+            }
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    
     ImGui::Text("Gerenciamento de Analisadores Goertzel");
     ImGui::Separator();
     ImGui::Spacing();
 
     // Input para inserir nova frequência
     ImGui::Text("Adicionar/Remover Analisador");
+    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+        "Clique sobre o valor para editar e digite a frequência desejada, ou use os botões + / -");
     ImGui::InputFloat("Frequência (Hz)", &s_new_frequency_input, 1.0f, 100.0f, "%.2f Hz");
     s_new_frequency_input = limitToTwoDecimals(s_new_frequency_input);
 
@@ -130,12 +162,7 @@ void FrontEnd::Application::showConfigurationPage() {
     if (ImGui::Button("Adicionar")) {
         addAnalyzer(s_new_frequency_input);
     }
-    ImGui::SameLine();
-    if (ImGui::Button("Remover")) {
-        removeAnalyzer(s_new_frequency_input);
-    }
 
-    ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
 
@@ -167,43 +194,13 @@ void FrontEnd::Application::showConfigurationPage() {
             // Botão remover
             if (ImGui::Button("Remover")) {
                 removeAnalyzer(freq);
-                it = s_analyzers_data.erase(it);
                 ImGui::PopID();
-                continue;
+                break; // sai do loop porque o iterador ficou inválido
             }
+
             ImGui::PopID();
             ++it;
         }
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-}
-
-// Página de seleção da fonte de áudio
-void FrontEnd::Application::showAudioSourceSelection() {
-    ImGui::Text("Seleção de Fonte de Áudio");
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    if (s_audio_sources.empty()) {
-        ImGui::Text("Nenhuma fonte de áudio disponível.");
-        return;
-    }
-
-    const char* current_source = s_audio_sources[s_selected_source_index].c_str();
-    if (ImGui::BeginCombo("##AudioSourceCombo", current_source)) {
-        for (int i = 0; i < s_audio_sources.size(); ++i) {
-            bool is_selected = (s_selected_source_index == i);
-            if (ImGui::Selectable(s_audio_sources[i].c_str(), is_selected)) {
-                s_selected_source_index = i;
-                setAudioSource(s_audio_sources[s_selected_source_index]);
-            }
-            if (is_selected) {
-                ImGui::SetItemDefaultFocus();
-            }
-        }
-        ImGui::EndCombo();
     }
 
     ImGui::Spacing();
@@ -492,12 +489,8 @@ void FrontEnd::Application::render(GLFWwindow* window) {
 
     // Abas para navegação
     if (ImGui::BeginTabBar("##MainTabBar")) {
-        if (ImGui::BeginTabItem("Configurações: Frequências")) {
+        if (ImGui::BeginTabItem("Configurações")) {
             showConfigurationPage();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Configurações: Fonte de Áudio")) {
-            showAudioSourceSelection();
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Visualização Geral")) {
