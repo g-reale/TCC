@@ -2,14 +2,8 @@
 
 using namespace std;
 
-atomic<bool> BackEnd::finished = false;
-atomic<bool> BackEnd::stopped = false;
-mutex BackEnd::critical;
-mutex BackEnd::processing;
-condition_variable BackEnd::condition;
-thread BackEnd::worker;
 Recorder<BUFFER_SIZE> BackEnd::recorder("");
-unordered_map<float,float> BackEnd::frequencies;
+array<float,BUFFER_SIZE> BackEnd::frame;
 unordered_map<float,Goertzel> BackEnd::analyzers;
 
 atomic<bool> BackEnd::read_names = false;
@@ -66,11 +60,9 @@ void BackEnd::setSource(const string & source){
     
     //guarantee that the source is valid
     if(!in_sources)
-    return;
+        return;
     
-    stop();
     recorder.reset(source);
-    start();
 }
 
 void BackEnd::initialize() {
@@ -82,27 +74,6 @@ void BackEnd::initialize() {
     pa_mainloop_api *api = pa_mainloop_get_api(main_loop);
     context = pa_context_new(api, "ListSources");
     pa_context_connect(context, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
-
-    worker = thread(
-    []{
-        array<float,BUFFER_SIZE> frame;
-        while(!finished){
-            throttle<SAMPLE_RATE/BUFFER_SIZE>(
-                [&frame]{
-                    unique_lock<mutex> lock(critical);
-                    condition.wait(lock,[]{return !stopped || finished;});
-
-                    processing.lock();
-                    recorder.record(frame);
-                    for (auto& [frequency, analyzer] : analyzers){
-                        frequencies[frequency] = analyzer.execute<BUFFER_SIZE>(frame);
-                        analyzer.clear();
-                    }
-                    processing.unlock();
-                }
-            );
-        }
-    });
 }
 
 void BackEnd::cleanup() {
@@ -117,43 +88,31 @@ void BackEnd::cleanup() {
         pa_mainloop_free(main_loop);
         main_loop = nullptr;
     }
-
-    //delete the worker thread
-    finished = true;
-    condition.notify_all();
-    if(worker.joinable())
-        worker.join();
-    
 }
 
 void BackEnd::createAnalyzer(float frequency){
-    stop();
     analyzers.try_emplace(frequency,frequency);
-    frequencies.try_emplace(frequency,0);
-    start();
 }
 
 void BackEnd::destroyAnalyzer(float frequency){
-    stop();
     auto match = analyzers.find(frequency);
     if(match != analyzers.end()){
         analyzers.erase(match);
-        frequencies.erase(frequencies.find(frequency));
     }
-    start();
 }
 
-void BackEnd::start(){
-    stopped = false;
-    condition.notify_all();
-}
-
-void BackEnd::stop(){
-    stopped = true;
-    processing.lock();
-    processing.unlock();
+void BackEnd::update(){
+    recorder.record(frame);
 }
 
 float BackEnd::queryFrequency(float frequency){
-    return frequencies[frequency];
+    
+    auto analyzer = analyzers.find(frequency);
+    if (analyzer != analyzers.end()){ 
+        float magnitude = (analyzer->second).execute(frame); 
+        cout << "analyzed: " << frequency << " " << magnitude << endl;
+        return magnitude;
+    }
+    else 
+        return -1;
 }

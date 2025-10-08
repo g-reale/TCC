@@ -10,21 +10,14 @@ Recorder<N>::~Recorder(){
 
 template<size_t N>
 void Recorder<N>::clear(){
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        finished = true;
-        ready = true;
-    }
-    cv.notify_one();
-    if(worker.joinable())
-        worker.join();
-
     if(pulse_audio_handle)
         pa_simple_free(pulse_audio_handle);
+    index = 0;
 }
 
 template<size_t N>
 void Recorder<N>::reset(const std::string & source){
+    
     clear();
     pa_sample_spec sample_spec = {
         .format = PA_SAMPLE_FLOAT32,
@@ -33,7 +26,7 @@ void Recorder<N>::reset(const std::string & source){
     };
 
     pa_buffer_attr attr = {
-        .maxlength = (uint32_t)-1,
+        .maxlength = sizeof(float) * N * 3,
         .tlength = 0,
         .prebuf = 0,
         .minreq = sizeof(float) * N,
@@ -52,52 +45,28 @@ void Recorder<N>::reset(const std::string & source){
         nullptr
     );
 
-    for(size_t i = 0; i < frames.size(); i++)
-        pa_simple_read(
-            pulse_audio_handle,
-            frames[i].data(),
-            N * sizeof(float),
-            nullptr
-        );
-
-    ready = false;
-    finished = false;
-    current_frame = 0;
-    index = 0;
-
-    worker = std::thread(
-        [this](){
-            while(true){
-                {
-                    std::unique_lock<std::mutex> lock(mtx);
-                    cv.wait(lock, [this] { return ready;});
-                    ready = false;
-                    if (finished) return;
-                }
-                
-                pa_simple_read(
-                    pulse_audio_handle,
-                    frames[!current_frame].data(),
-                    N * sizeof(float),
-                    nullptr
-                );
-            };
-            return;
-        }
+    pa_simple_read(
+        pulse_audio_handle,
+        frame.data(),
+        N * sizeof(float),
+        nullptr
     );
 }
 
 template<size_t N>
 inline float Recorder<N>::record(){
     if(index == N){
+        pa_simple_read(
+            pulse_audio_handle,
+            frame.data(),
+            N * sizeof(float),
+            nullptr
+        );
         index = 0;
-        current_frame = !current_frame;
-        std::lock_guard<std::mutex> lock(mtx);
-        ready = true;
-        cv.notify_one();
     }
+    
 
-    float sample = frames[current_frame][index];
+    float sample = frame[index];
     index++;
     return sample;
 }
@@ -106,14 +75,17 @@ template<size_t N>
 inline void Recorder<N>::record(std::array<float,N> & frame){
     
     std::copy(
-        frames[current_frame].begin(),
-        frames[current_frame].end(),
+        this->frame.begin(),
+        this->frame.end(),
         frame.begin()
     );
 
+    pa_simple_read(
+        pulse_audio_handle,
+        this->frame.data(),
+        N * sizeof(float),
+        nullptr
+    );
+
     index = 0;
-    current_frame = !current_frame;
-    std::lock_guard<std::mutex> lock(mtx);
-    ready = true;
-    cv.notify_one();
 }

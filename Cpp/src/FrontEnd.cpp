@@ -91,7 +91,6 @@ void FrontEnd::Application::removeAnalyzer(float frequency) {
 void FrontEnd::Application::startAnalyzer(float frequency) {
     float freq_to_start = limitToTwoDecimals(frequency);
     if (s_analyzers_data.count(freq_to_start)) {
-        BackEnd::start(); // O backend inicia todos os analisadores
         s_analyzers_data[freq_to_start].running = true;
     }
 }
@@ -100,7 +99,6 @@ void FrontEnd::Application::startAnalyzer(float frequency) {
 void FrontEnd::Application::stopAnalyzer(float frequency) {
     float freq_to_stop = limitToTwoDecimals(frequency);
     if (s_analyzers_data.count(freq_to_stop)) {
-        BackEnd::stop(); // O backend para todos os analisadores
         s_analyzers_data[freq_to_stop].running = false;
     }
 }
@@ -221,6 +219,7 @@ void FrontEnd::Application::showVisualizationPage() {
         return;
     }
 
+    BackEnd::update();
     for (auto& pair : s_analyzers_data) {
         float freq = pair.first;
         GoertzelAnalyzerData& data = pair.second;
@@ -229,26 +228,11 @@ void FrontEnd::Application::showVisualizationPage() {
         ImGui::Text("Analisador: %.2f Hz", freq);
         ImGui::Text("Status: %s", data.running ? "Rodando" : "Pausado/Parado");
 
-        if (data.running && (current_time - data.last_update_time > 0.05)) {
+        if (data.running && (current_time - data.last_update_time > 0)) {
             float magnitude = BackEnd::queryFrequency(freq);
             if (data.spectrum_history.size() > 200)
                 data.spectrum_history.erase(data.spectrum_history.begin());
             data.spectrum_history.push_back(magnitude);
-            
-            // Atualizar matriz do heatmap (espectrograma simulado)
-            std::vector<float> current_spectrum(data.spectrum_bins);
-            for (int i = 0; i < data.spectrum_bins; ++i) {
-                float freq_offset = (i - data.spectrum_bins/2) * 100.0f;
-                float distance = std::abs(freq_offset);
-                current_spectrum[i] = magnitude * std::exp(-distance * 0.01f) + 
-                                     0.1f * std::abs(sin(current_time * (i + 1) * 0.5f));
-            }
-            
-            if (data.spectrum_history_matrix.size() >= data.heatmap_history_size) {
-                data.spectrum_history_matrix.erase(data.spectrum_history_matrix.begin());
-            }
-            data.spectrum_history_matrix.push_back(current_spectrum);
-            
             data.last_update_time = current_time;
         }
 
@@ -258,7 +242,6 @@ void FrontEnd::Application::showVisualizationPage() {
             if (ImPlot::BeginPlot((std::string("##SpectrumMagnitude") + std::to_string(freq)).c_str(), ImVec2(-1, 300))) {
                 ImPlot::SetupAxes("Tempo (amostras atrás)", "Magnitude");
                 ImPlot::SetupAxisLimits(ImAxis_X1, -(float)data.spectrum_history.size(), 0, ImGuiCond_Always);
-                ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.5);
                 if (!data.spectrum_history.empty()) {
                     std::vector<float> x_indices(data.spectrum_history.size());
                     for (size_t i = 0; i < data.spectrum_history.size(); ++i)
@@ -269,135 +252,6 @@ void FrontEnd::Application::showVisualizationPage() {
             }
         }
 
-        // Gráfico 2: Derivada Temporal da Magnitude
-        std::string header_deriv_title = "Derivada Temporal da Magnitude (" + std::to_string(freq) + " Hz)";
-        if (ImGui::CollapsingHeader(header_deriv_title.c_str())) {
-            ImGui::TextWrapped(
-                "Este gráfico mostra as variações instantâneas da magnitude, calculadas como a diferença "
-                "entre amostras consecutivas. Útil para identificar mudanças rápidas e transientes no sinal.");
-            ImGui::Spacing();
-            
-            if (ImPlot::BeginPlot((std::string("##MagnitudeDerivative") + std::to_string(freq)).c_str(), ImVec2(-1, 250))) {
-                ImPlot::SetupAxes("Tempo (amostras atrás)", "Variação da Magnitude");
-                
-                if (data.spectrum_history.size() > 1) {
-                    // Calcular derivada numérica simples
-                    std::vector<float> derivative(data.spectrum_history.size() - 1);
-                    std::vector<float> x_derivative(data.spectrum_history.size() - 1);
-                    
-                    for (size_t i = 0; i < derivative.size(); ++i) {
-                        derivative[i] = data.spectrum_history[i + 1] - data.spectrum_history[i];
-                        x_derivative[i] = -(float)(derivative.size() - 1 - i);
-                    }
-                    
-                    // Encontrar limites para os eixos
-                    float min_deriv = *std::min_element(derivative.begin(), derivative.end());
-                    float max_deriv = *std::max_element(derivative.begin(), derivative.end());
-                    float margin = std::max(0.1f, std::max(std::abs(min_deriv), std::abs(max_deriv)) * 0.1f);
-                    
-                    ImPlot::SetupAxisLimits(ImAxis_X1, -(float)derivative.size(), 0, ImGuiCond_Always);
-                    ImPlot::SetupAxisLimits(ImAxis_Y1, min_deriv - margin, max_deriv + margin, ImGuiCond_Always);
-                    
-                    ImPlot::PlotLine("Derivada", x_derivative.data(), derivative.data(), derivative.size());
-                    
-                    // Linha de referência zero
-                    float zero_line[2] = {0.0f, 0.0f};
-                    float x_zero[2] = {-(float)derivative.size(), 0.0f};
-                    ImPlot::PlotLine("Zero", x_zero, zero_line, 2);
-                }
-                ImPlot::EndPlot();
-            }
-        }
-
-        // Gráfico 3: Média Móvel da Magnitude
-        std::string header_avg_title = "Média Móvel da Magnitude (" + std::to_string(freq) + " Hz)";
-        if (ImGui::CollapsingHeader(header_avg_title.c_str())) {
-            ImGui::TextWrapped(
-                "Este gráfico mostra a média móvel simples (janela de 10 amostras) da magnitude, "
-                "suavizando a série temporal para evidenciar tendências e reduzir ruído.");
-            ImGui::Spacing();
-            
-            if (ImPlot::BeginPlot((std::string("##MovingAverage") + std::to_string(freq)).c_str(), ImVec2(-1, 250))) {
-                ImPlot::SetupAxes("Tempo (amostras atrás)", "Magnitude");
-                ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.5);
-                
-                const int window_size = 10;
-                if (data.spectrum_history.size() >= window_size) {
-                    // Calcular média móvel
-                    std::vector<float> moving_avg;
-                    std::vector<float> x_moving_avg;
-                    
-                    for (size_t i = window_size - 1; i < data.spectrum_history.size(); ++i) {
-                        float sum = 0.0f;
-                        for (int j = 0; j < window_size; ++j) {
-                            sum += data.spectrum_history[i - j];
-                        }
-                        moving_avg.push_back(sum / window_size);
-                        x_moving_avg.push_back(-(float)(data.spectrum_history.size() - 1 - i));
-                    }
-                    
-                    ImPlot::SetupAxisLimits(ImAxis_X1, -(float)data.spectrum_history.size(), 0, ImGuiCond_Always);
-                    
-                    // Plotar magnitude original (mais transparente)
-                    if (!data.spectrum_history.empty()) {
-                        std::vector<float> x_indices(data.spectrum_history.size());
-                        for (size_t i = 0; i < data.spectrum_history.size(); ++i)
-                            x_indices[i] = -(float)(data.spectrum_history.size() - 1 - i);
-                        
-                        ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 1.0f);
-                        ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
-                        ImPlot::PlotLine("Magnitude Original", x_indices.data(), data.spectrum_history.data(), data.spectrum_history.size());
-                        ImPlot::PopStyleColor();
-                        ImPlot::PopStyleVar();
-                    }
-                    
-                    // Plotar média móvel (mais destacada)
-                    ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
-                    ImPlot::PlotLine("Média Móvel", x_moving_avg.data(), moving_avg.data(), moving_avg.size());
-                    ImPlot::PopStyleVar();
-                }
-                ImPlot::EndPlot();
-            }
-        }
-
-        // Gráfico 4: Heatmap do Espectro ao Longo do Tempo
-        std::string header_heatmap_title = "Espectrograma Simulado (" + std::to_string(freq) + " Hz)";
-        if (ImGui::CollapsingHeader(header_heatmap_title.c_str())) {
-            ImGui::TextWrapped(
-                "Este heatmap mostra a distribuição de magnitude em diferentes frequências ao longo do tempo, "
-                "simulando um espectrograma. As cores indicam a intensidade da magnitude para cada frequência.");
-            ImGui::Spacing();
-            
-            if (ImPlot::BeginPlot((std::string("##Spectrogram") + std::to_string(freq)).c_str(), ImVec2(-1, 300))) {
-                ImPlot::SetupAxes("Tempo (amostras atrás)", "Frequência (Hz)");
-                
-                if (!data.spectrum_history_matrix.empty()) {
-                    // Preparar dados para o heatmap
-                    int time_steps = data.spectrum_history_matrix.size();
-                    int freq_bins = data.spectrum_bins;
-                    
-                    // Converter matriz para formato linear para ImPlot
-                    std::vector<float> heatmap_data(time_steps * freq_bins);
-                    for (int t = 0; t < time_steps; ++t) {
-                        for (int f = 0; f < freq_bins; ++f) {
-                            heatmap_data[t * freq_bins + f] = data.spectrum_history_matrix[t][f];
-                        }
-                    }
-                    
-                    float freq_min = data.frequency - (freq_bins/2) * 100.0f;
-                    float freq_max = data.frequency + (freq_bins/2) * 100.0f;
-                    
-                    ImPlot::SetupAxisLimits(ImAxis_X1, -(float)time_steps, 0, ImGuiCond_Always);
-                    ImPlot::SetupAxisLimits(ImAxis_Y1, freq_min, freq_max, ImGuiCond_Always);
-
-                    ImPlot::PlotHeatmap("Intensidade", heatmap_data.data(), freq_bins, time_steps, 
-                                       0.0f, 1.0f, nullptr, 
-                                       ImPlotPoint(-(float)time_steps, freq_min), 
-                                       ImPlotPoint(0, freq_max));
-                }
-                ImPlot::EndPlot();
-            }
-        }
         ImGui::PopID();
         ImGui::Spacing();
         ImGui::Separator();
@@ -436,14 +290,6 @@ void FrontEnd::Application::showOverallVisualizationPage() {
                     data.spectrum_history.erase(data.spectrum_history.begin());
                 data.spectrum_history.push_back(magnitude);
                 data.last_update_time = current_time;
-
-                // Adicionar esta verificação para print no console
-                const float AUDIO_THRESHOLD = 0.01f; // Limiar para considerar que há áudio (ajuste conforme necessário)
-                if (magnitude > AUDIO_THRESHOLD) {
-                    printf("Audio detectado na frequencia %.2f Hz! Magnitude: %.4f\n", freq, magnitude);
-                } else {
-                    printf("Nenhum audio significativo na frequencia %.2f Hz. Magnitude: %.4f\n", freq, magnitude);
-                }
             }
             frequencies.push_back(freq);
             magnitudes.push_back(data.spectrum_history.empty() ? 0.0f : data.spectrum_history.back());

@@ -18,14 +18,8 @@
 
 class BackEnd{
     private:
-        static std::atomic<bool> finished;
-        static std::atomic<bool> stopped;
-        static std::mutex critical;
-        static std::mutex processing;
-        static std::condition_variable condition;
-        static std::thread worker;
         static Recorder<BUFFER_SIZE> recorder;
-        static std::unordered_map<float,float> frequencies;
+        static std::array<float,BUFFER_SIZE> frame;
         static std::unordered_map<float,Goertzel> analyzers;
         
         static std::atomic<bool> read_names;
@@ -40,12 +34,11 @@ class BackEnd{
         static std::vector<std::string> querySources();
 
         static float queryFrequency(float frequency);
+        static void update();
         static void createAnalyzer(float frequency);
         static void destroyAnalyzer(float frequency);
         
         static void initialize();
         static void cleanup();
-        static void start();
-        static void stop();
 };
 #endif
