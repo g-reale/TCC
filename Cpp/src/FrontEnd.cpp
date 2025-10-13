@@ -155,10 +155,12 @@ void FrontEnd::Application::showConfigurationPage() {
     ImGui::InputFloat("Frequência (Hz)", &s_new_frequency_input, 1.0f, 100.0f, "%.2f Hz");
     s_new_frequency_input = limitToTwoDecimals(s_new_frequency_input);
 
+    
     // Botões para adicionar/remover
     ImGui::SameLine();
     if (ImGui::Button("Adicionar")) {
         addAnalyzer(s_new_frequency_input);
+        startAnalyzer(s_new_frequency_input);
     }
 
     ImGui::Separator();
@@ -183,9 +185,7 @@ void FrontEnd::Application::showConfigurationPage() {
                     stopAnalyzer(freq);
                 }
             } else {
-                if (ImGui::Button("Iniciar")) {
-                    startAnalyzer(freq);
-                }
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), "Pausado");
             }
             ImGui::SameLine();
 
