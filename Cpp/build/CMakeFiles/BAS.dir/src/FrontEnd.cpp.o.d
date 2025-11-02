@@ -309,7 +309,8 @@ CMakeFiles/BAS.dir/src/FrontEnd.cpp.o: \
  /home/fernanda/TCC\ GABRIEL/TCC/Cpp/imgui/backends/imgui_impl_glfw.h \
  /home/fernanda/TCC\ GABRIEL/TCC/Cpp/imgui/backends/imgui_impl_opengl3.h \
  /home/fernanda/TCC\ GABRIEL/TCC/Cpp/implot/implot.h \
- /usr/include/c++/12/iomanip /usr/include/c++/12/locale \
+ /usr/include/c++/12/cfloat /usr/include/c++/12/iomanip \
+ /usr/include/c++/12/locale \
  /usr/include/c++/12/bits/locale_facets_nonio.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/messages_members.h \
