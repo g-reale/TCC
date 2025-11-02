@@ -51,6 +51,10 @@ namespace FrontEnd {
         static float s_new_frequency_input; // Frequência a ser adicionada/removida
         static int s_selected_source_index; // Índice da fonte de áudio selecionada
         static std::vector<std::string> s_audio_sources; // Lista de fontes de áudio disponíveis
+        
+        // Variáveis de controle de dB para o espectrograma
+        static double s_min_magnitude;
+        static double s_max_magnitude;
 
         // Páginas da interface
         static void showConfigurationPage();
@@ -61,5 +65,3 @@ namespace FrontEnd {
 }
 
 #endif
-
-
