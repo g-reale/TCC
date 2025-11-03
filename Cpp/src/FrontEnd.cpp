@@ -264,11 +264,11 @@ void FrontEnd::Application::showVisualizationPage() {
                 ImPlot::SetupAxisLimits(ImAxis_X1, -(float)data.spectrum_history.size(), 0, ImGuiCond_Always);
 
                 // Eixo Y: ajusta dinamicamente de 0 até 10% acima do valor máximo do histórico
-                float y_max = 1.0f; // valor padrão caso não haja histórico
-                if (!data.spectrum_history.empty()) {
-                    y_max = *std::max_element(data.spectrum_history.begin(), data.spectrum_history.end()) * 1.1f;
-                }
-                ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0f, y_max, ImGuiCond_Always);
+                // float y_max = 1.0f; // valor padrão caso não haja histórico
+                // if (!data.spectrum_history.empty()) {
+                //     y_max = *std::max_element(data.spectrum_history.begin(), data.spectrum_history.end()) * 1.1f;
+                // }
+                // ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0f, y_max, ImGuiCond_Always);
 
                 // Só plota se houver dados
                 if (!data.spectrum_history.empty()) {
@@ -279,7 +279,11 @@ void FrontEnd::Application::showVisualizationPage() {
                         x_indices[i] = -(float)(data.spectrum_history.size() - 1 - i);
 
                     // Desenha a curva de magnitude ao longo do tempo
+                    ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 100, 100, 255));
+                    ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
                     ImPlot::PlotLine("Magnitude", x_indices.data(), data.spectrum_history.data(), data.spectrum_history.size());
+                    ImPlot::PopStyleVar();
+                    ImPlot::PopStyleColor();
                 }
 
                 // Finaliza o gráfico
@@ -334,7 +338,7 @@ void FrontEnd::Application::showOverallVisualizationPage() {
 
             // Configuração dos eixos do gráfico
             ImPlot::SetupAxes("Frequência (Hz)", "Magnitude");
-            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.5);
+            // ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.5);
 
             std::vector<float> frequencies;
             std::vector<float> magnitudes;
@@ -396,7 +400,11 @@ void FrontEnd::Application::showOverallVisualizationPage() {
                 }
 
                 // Desenha o gráfico (usa hastes em vez de barras)
+                ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 100, 100, 255));
+                ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);    
                 ImPlot::PlotStems("Magnitudes", sorted_frequencies.data(), sorted_magnitudes.data(), sorted_frequencies.size());
+                ImPlot::PopStyleVar();
+                ImPlot::PopStyleColor();
             }
 
             ImPlot::EndPlot();

@@ -7,7 +7,8 @@ inline void Goertzel::update(float sample){
 inline float Goertzel::execute(){
     float re = s_1 - fir_1 * s_2;
     float im = fir_2 * s_2;
-    return re * re + im * im;
+    float magnitude = re * re + im * im;
+    return magnitude;
 }
 
 template<size_t N>

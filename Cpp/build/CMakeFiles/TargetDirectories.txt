@@ -1,3 +1,0 @@
-/home/fernanda/TCC GABRIEL/TCC/Cpp/build/CMakeFiles/BAS.dir
-/home/fernanda/TCC GABRIEL/TCC/Cpp/build/CMakeFiles/edit_cache.dir
-/home/fernanda/TCC GABRIEL/TCC/Cpp/build/CMakeFiles/rebuild_cache.dir

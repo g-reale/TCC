@@ -18,6 +18,8 @@
 
 class BackEnd{
     private:
+        static float normalization;
+        static constexpr float decay = 0.99;
         static Recorder<BUFFER_SIZE> recorder;
         static std::array<float,BUFFER_SIZE> frame;
         static std::unordered_map<float,Goertzel> analyzers;

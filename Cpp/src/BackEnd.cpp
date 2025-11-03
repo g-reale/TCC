@@ -5,6 +5,7 @@ using namespace std;
 Recorder<BUFFER_SIZE> BackEnd::recorder("");
 array<float,BUFFER_SIZE> BackEnd::frame;
 unordered_map<float,Goertzel> BackEnd::analyzers;
+float BackEnd::normalization;
 
 atomic<bool> BackEnd::read_names = false;
 pa_mainloop *BackEnd::main_loop = nullptr;
@@ -69,6 +70,7 @@ void BackEnd::initialize() {
     if (main_loop != nullptr || context != nullptr)
         return;
 
+    normalization = 1;
     sources.clear();
     main_loop = pa_mainloop_new();
     pa_mainloop_api *api = pa_mainloop_get_api(main_loop);
@@ -110,8 +112,8 @@ float BackEnd::queryFrequency(float frequency){
     auto analyzer = analyzers.find(frequency);
     if (analyzer != analyzers.end()){ 
         float magnitude = (analyzer->second).execute(frame); 
-        cout << "analyzed: " << frequency << " " << magnitude << endl;
-        return magnitude;
+        normalization = normalization > magnitude ? normalization * decay : magnitude;
+        return magnitude / normalization;
     }
     else 
         return -1;

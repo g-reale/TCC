@@ -9,7 +9,7 @@
 
 class Goertzel{
     private:
-        static constexpr float a = 0.6;
+        static constexpr float a = 0.9995;
         static constexpr float a_exp_2 = a * a;
 
         float iir_1;
