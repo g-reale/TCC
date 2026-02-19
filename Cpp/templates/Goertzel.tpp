@@ -18,3 +18,12 @@ float Goertzel::execute(const std::array<float,N>& samples){
         update(sample);
     return execute();
 }
+
+template<size_t N>
+float Goertzel::execute(float frequency, const std::array<float,N>& samples){
+    clear();
+    set(frequency);
+    for(float sample : samples)
+        update(sample);
+    return execute();
+}

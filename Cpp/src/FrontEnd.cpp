@@ -228,6 +228,7 @@ void FrontEnd::Application::showVisualizationPage() {
     }
 
     BackEnd::update();
+
     for (auto& pair : s_analyzers_data) {
         float freq = pair.first;
         GoertzelAnalyzerData& data = pair.second;
@@ -381,28 +382,38 @@ void FrontEnd::Application::showOverallVisualizationPage() {
 
             // Só plota se houver dados válidos
             if (!sorted_frequencies.empty()) {
-                float bar_width;
+                ImPlot::SetupAxisLimits(ImAxis_X1, 0, 10e3);
+                // float bar_width;
 
-                if (sorted_frequencies.size() == 1) {
+                // if (sorted_frequencies.size() == 1) {
                     // Caso especial: só uma frequência → centraliza a barra
-                    bar_width = sorted_frequencies[0] * 0.2f;
-                    ImPlot::SetupAxisLimits(ImAxis_X1, sorted_frequencies[0] - bar_width, sorted_frequencies[0] + bar_width, ImGuiCond_Always);
-                } else {
+                    // bar_width = sorted_frequencies[0] * 0.2f;
+                    // ImPlot::SetupAxisLimits(ImAxis_X1, sorted_frequencies[0] - bar_width, sorted_frequencies[0] + bar_width, ImGuiCond_Always);
+                // } else {
                     // Múltiplas frequências → calcula o espaçamento médio para ajustar a largura
-                    float min_diff = FLT_MAX;
-                    for (size_t i = 1; i < sorted_frequencies.size(); ++i)
-                        min_diff = std::min(min_diff, sorted_frequencies[i] - sorted_frequencies[i - 1]);
+                    // float min_diff = FLT_MAX;
+                    // for (size_t i = 1; i < sorted_frequencies.size(); ++i)
+                        // min_diff = std::min(min_diff, sorted_frequencies[i] - sorted_frequencies[i - 1]);
 
-                    bar_width = min_diff * 0.8f;
+                    // bar_width = min_diff * 0.8f;
 
                     // Adiciona margem nas bordas do gráfico
-                    ImPlot::SetupAxisLimits(ImAxis_X1, sorted_frequencies.front() - min_diff, sorted_frequencies.back() + min_diff, ImGuiCond_Always);
-                }
+                    // ImPlot::SetupAxisLimits(ImAxis_X1, sorted_frequencies.front() - min_diff, sorted_frequencies.back() + min_diff, ImGuiCond_Always);
+                // }
 
                 // Desenha o gráfico (usa hastes em vez de barras)
                 ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 100, 100, 255));
                 ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);    
                 ImPlot::PlotStems("Magnitudes", sorted_frequencies.data(), sorted_magnitudes.data(), sorted_frequencies.size());
+                ImPlot::PopStyleVar();
+                ImPlot::PopStyleColor();
+
+                // Adiciona o pico do espectro
+                auto [frequency, magnitude] = BackEnd::maximum();
+
+                ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 255, 0, 255));  // yellow stem
+                ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 3.0f);
+                ImPlot::PlotStems("pico", &frequency, &magnitude, 1);
                 ImPlot::PopStyleVar();
                 ImPlot::PopStyleColor();
             }

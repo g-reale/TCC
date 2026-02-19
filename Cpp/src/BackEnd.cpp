@@ -6,11 +6,14 @@ Recorder<BUFFER_SIZE> BackEnd::recorder("");
 array<float,BUFFER_SIZE> BackEnd::frame;
 unordered_map<float,Goertzel> BackEnd::analyzers;
 float BackEnd::normalization;
+BAS BackEnd::bas(0,8e3,10,1,100);
+WBAS<BUFFER_SIZE> BackEnd::wbas;
 
 atomic<bool> BackEnd::read_names = false;
 pa_mainloop *BackEnd::main_loop = nullptr;
 pa_context *BackEnd::context = nullptr;
 vector<string> BackEnd::sources;
+
 
 void BackEnd::sourceInfoCallBack(pa_context * context, const pa_source_info *info, int eol, void *userdata) {
     if (eol){
@@ -117,4 +120,14 @@ float BackEnd::queryFrequency(float frequency){
     }
     else 
         return -1;
+}
+
+pair<float,float> BackEnd::maximum(){
+    static Goertzel analizer(0.0f);
+    // float frequency = bas.execute(frame);
+    float frequency = wbas.execute(frame);
+    // float magnitude = analizer.execute(frequency,frame); 
+    float magnitude = 1;
+    normalization = normalization > magnitude ? normalization * decay : magnitude;
+    return pair<float,float>(frequency,1);
 }

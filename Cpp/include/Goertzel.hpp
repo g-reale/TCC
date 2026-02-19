@@ -28,6 +28,8 @@ class Goertzel{
         inline float execute();
         template<size_t N>
         float execute(const std::array<float,N>& samples);
+        template<size_t N>
+        float execute(float frequency, const std::array<float,N>& samples);
 };
 
 #include "../templates/Goertzel.tpp"

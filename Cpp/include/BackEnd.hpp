@@ -5,6 +5,8 @@
 #include "Goertzel.hpp"
 #include "Recorder.hpp"
 #include "Utils.hpp"
+#include "WBAS.hpp"
+#include "BAS.hpp"
 
 #include <mutex>
 #include <string>
@@ -12,6 +14,7 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <utility>
 #include <unordered_map>
 #include <condition_variable>
 #include <pulse/pulseaudio.h>
@@ -23,6 +26,8 @@ class BackEnd{
         static Recorder<BUFFER_SIZE> recorder;
         static std::array<float,BUFFER_SIZE> frame;
         static std::unordered_map<float,Goertzel> analyzers;
+        static BAS bas;
+        static WBAS<BUFFER_SIZE> wbas;
         
         static std::atomic<bool> read_names;
         static pa_mainloop * main_loop;
@@ -35,6 +40,7 @@ class BackEnd{
         static void setSource(const std::string& source);
         static std::vector<std::string> querySources();
 
+        static std::pair<float,float> maximum();
         static float queryFrequency(float frequency);
         static void update();
         static void createAnalyzer(float frequency);
