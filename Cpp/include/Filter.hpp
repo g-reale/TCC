@@ -33,10 +33,21 @@ class Filter{
     private:
         std::array<filtertype,N> fir;
         std::array<filtertype,M> iir;
-        Circular<N> firmem;
-        Circular<M> iirmem;
+        Circular<N,sampletype> firmem;
+        Circular<M,resulttype> iirmem;
     public:
+        Filter() = default;
         Filter(std::array<filtertype,N> fir, std::array<filtertype,M> iir) : fir(fir), iir(iir) {};
+        void clear();
+        resulttype execute(sampletype sample);
+};
+
+template<size_t order, typename filtertype, typename sampletype, typename resulttype>
+class Sos{
+    private:
+        std::array<Filter<3,2,filtertype,sampletype,resulttype>,order> biquads;
+    public:
+        Sos(std::array<std::pair<std::array<filtertype,3>,std::array<filtertype,2>>,order> coefficients);
         void clear();
         resulttype execute(sampletype sample);
 };
