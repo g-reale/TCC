@@ -17,13 +17,13 @@ void WBAS<N>::filter(const std::array<float,N>& samples, std::array<float,N>& fi
 
 template<size_t N>
 void WBAS<N>::upperband(const std::array<float,N>& wholeband, const std::array<float,N>& lowerband, std::array<float,N>& upperband, size_t step){
-    static constexpr std::array<float,4> COS_PI2 = {1,0,-1,0};
+    static constexpr std::array<float,4> COS_PI2 = {2,0,-2,0};
     
     //there are way more efficient ways of doing this... (time varing filter coefficients)
     size_t j = 0;
-    for(size_t i = 0; i < N; i++)
-        upperband[i] = lpf.execute(COS_PI2[i&0b11] * (wholeband[i] - lowerband[i]));
-    lpf.clear();    
+    for(size_t i = 0; i < N; i+=step)
+        upperband[i] = COS_PI2[i&0b11] * (wholeband[i] - lowerband[i]);
+    filter(upperband,upperband,step);
 }
 
 template<size_t N>
@@ -50,13 +50,13 @@ float WBAS<N>::execute(const std::array<float,N>& samples){
             wb_energy = lb_energy/2;//estimate
             std::swap(lower,whole);
             up -= (up - low)/2.0f;
-            std::cout << "\tup" << std::endl;
+            std::cout << "\t" << lb_energy << "\t" << ub_energy << "\t" << up << "\t" << low <<  std::endl;
         }
         else{//upper band wins
             wb_energy = ub_energy/2;//estimate
             upperband(*whole, *lower, *whole, i);
             low += (up - low)/2.0f;
-            std::cout << "\tlow" << std::endl;
+            std::cout << "\t" << lb_energy << "\t" << ub_energy << "\t" << up << "\t" << low <<  std::endl;
         }
     }
 
