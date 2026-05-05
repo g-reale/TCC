@@ -1,0 +1,38 @@
+% !TEX root = ../tcc.tex
+
+\subsection{Trabalhos Correlatos}
+==posso colocar os nossos aqui?==
+
+\subsection{Definição do problema}
+\label{sub:model}
+
+Considere o sinal $x:\mathbb{Z}\to\mathbb{R}$ e sua Transformada de Fourier Discreta, do inglês \ac{DFT} $X(\Omega):\mathbb{R}\to\mathbb{C}$ dada por:
+
+\begin{align}
+    \label{eq:dft}
+    X(\Omega) = \sum_{k = -\infty}^{\infty} x[k] e^{j\Omega k} , \Omega \in [-\pi,\pi]
+\end{align}
+
+O objetivo é determinar a frequência de máximo módulo no espectro de $x$, isto é, a frequência mais energética do sinal. Assim define-se $\Omega_m$ como:
+
+\begin{align}
+    \label{eq:omegam}
+    \Omega_m \triangleq \underset{\Omega \in [-\pi,\pi]}{\arg \max} \lvert X(\Omega) \rvert
+\end{align}
+
+\subsection{Objetivos}
+\subsubsection{Objetivo Geral}
+
+Elaborar um algorítimo que consiga detectar a frequência de pico, conforme \ref{sub:model}, com complexidade idêntica (ou inferior) ao algorítimo estado da arte descrito em \ref{sub:stateoftheart}.
+
+\subsubsection{Objetivos Específicos}
+
+Os seguintes são os objetivos específicos:
+
+\begin{enumerate}
+    \item Mostrar as características matemáticas do método: provar convergência, verificar complexidade assintótica e tempo de convergência.
+    \item Escrever a infraestrutura de teste para a validação do algorítimo (gravador de amostras e analisador de espectro).
+    \item Contrastar a performance do algorítimo proposto com \ref{sub:stateoftheart}.
+\end{enumerate}
+
+\subsection{Estrutura do Texto}
