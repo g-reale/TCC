@@ -1,0 +1,161 @@
+% !TEX root = ../tcc.tex
+
+A seguir serão apresentados conceitos externos importantes para
+o funcionamento do projeto.
+
+\subsection{Ferramental Matemático}
+
+\subsubsection{Transformada Rápida de Fourier e o algorítimo estado da arte}
+
+A Transformada Rápida de Fourier, \ac{FFT}, é um algorítimo tradicional na área da computação com extrema importância para o processamento de sinais digitais. O algorítimo computa eficientemente \ac{DFT} \eqref{eq:dft} de um vetor de entrada.
+
+Notavelmente, a \ac{FFT} computa o espectro do sinal com complexidade assintótica $O(nlog(n))$ sendo $n$ o tamanho da entrada. Em contraposto, o cálculo por meio da definição \eqref{eq:dft} produz complexidade $O(n^2)$ \cite{cooley1965}.
+
+\label{sub:stateoftheart}
+A \ac{FFT} também serve de base para algorítimos de extração de frequência máxima. Tradicionalmente, computa-se a \ac{FFT} do vetor e em seguida procura-se pela frequência com maior módulo. Esse procedimento herda a complexidade da \ac{FFT}, visto que o passo adicional de busca possuí complexidade linear, não alterando a classe assintótica $O(nlog(n))$ do algorítimo \cite{Rastislav2013,Garima2020}. O algorítimo \ref{alg:max_freq}, traduzido de \citeonline{Garima2020}, sumariza o procedimento aplicado.
+
+\begin{algorithm}
+\caption{Frequência Máxima}
+\label{alg:max_freq}
+\begin{algorithmic}[1]
+    \Require Sinal de áudio $x$
+    \State Converter o sinal para o domínio da frequência via FFT
+    \State Calcular o valor absoluto do sinal transformado
+    \State Encontrar o valor máximo do resultado do passo anterior
+    \State \Return frequência de maior módulo $\Omega_m$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Teorema de Parseval}
+
+O Teorema de Parseval relaciona a energia contida em um sinal $x$ com a energia contida em seu espectro $X$ \cite{Oppenheim1997}. Para os propósitos desse documento, $x$ é geralmente é um sinal discreto, portanto é apresentada a versão discreta do teorema. 
+
+\begin{thm}[Parseval]
+    Seja $x$ um sinal discreto e $X$ sua transformada de Fourier, então:
+    \begin{align}
+    \label{eq:Parseval}
+    \sum_{n=-\infty}^{\infty} \rvert x[n] \lvert^2 dt = \frac{1}{2\pi}\int_{-\infty}^{\infty} \rvert X(\Omega)^2 \lvert d\Omega
+    \end{align}
+\end{thm}
+
+Independente da versão exata do teorema vale a seguinte conclusão: a energia contida no domínio do tempo é proporcional à energia contida no domínio da frequência.
+
+\subsubsection{Teorema de Nyquist}
+
+O Teorema de Nyquist determina a frequência mínima de amostragem necessária para representar um sinal de banda limitada sem perda de informação (\textit{aliasing}) \cite{Oppenheim1997}. 
+
+\begin{thm}[Nyquist]
+Seja $x$ um sinal com banda limitada, seja $\omega$ a frequência máxima de $x$. Então para que $x$ seja amostrado sem perda de informação, a frequência de amostragem $F_s$ deve ser no mínimo:
+
+\begin{align}
+    \label{eq:Nyquist}
+    2\omega < F_s
+\end{align}
+\end{thm}
+
+\subsection{Ferramental Computacional}
+
+\subsubsection{Algorítimo de Goertzel}
+\label{sub:Goertzel}
+
+==talvez seja um pouco overkill a minha análise, mais ja tinha esse texto pronto dos outros projetos que fizemos==
+
+==talvez ainda possa colocar essa dedução dentro do desenvolvimento do BAS==
+
+O objetivo do algoritmo de Goertzel é computar a transformada de \textit{Fourier} de um sinal discreto para uma única frequência de interesse \cite{Goertzel1958}. O algorítimo é mais eficiente do que o cálculo pela definição \eqref{eq:dft} já que utiliza somente aritmética real. Abaixo sua dedução.
+
+Considere a \ac{DFT} de um sinal como em \eqref{eq:dft}, essa pode ser escrita recursivamente como a seguir. 
+
+\begin{align*}
+    &y[n] = x[n] + e^{j\Omega}y[n-1]\\
+    &= x[n] + e^{j\Omega}x[n-1] + e^{j2\Omega}y[n-2]\\
+    &= x[n] + e^{j\Omega}x[n-1] + e^{j2\Omega}x[n-2] + 
+    e^{j3\Omega}y[n-3]\\
+    & \cdots
+\end{align*}
+
+Em geral:
+
+\begin{align*}
+    &y[n] = \sum_{i = -\infty}^{n}x[i]e^{j\Omega(n-i)}\\
+    &y[n] = e^{j\Omega n}\sum_{i = -\infty}^{n}x[i]e^{-j\Omega i}\\
+\end{align*}
+
+Considerando $x$ uma sequência de largura $N$ finita, iniciando em $n=0$:
+
+\begin{align*}
+    &y[N-1] = e^{j\Omega (N-1)}\sum_{i = 0}^{N-1}x[i]e^{-j\Omega i}\\
+    &y[N-1] = e^{j\Omega (N-1)}X(-\Omega)
+\end{align*}
+    
+O filtro apresentado computa a transformada, salvo uma constante multiplicativa e a necessidade de inverter o sinal de \(\Omega\). Analisando esse filtro no domínio \(z\):
+
+\begin{align*}
+    &\frac{Y(z)}{X(z)} = \frac{\sum_{k = 0}^N a_k z^{-k}}{1-\sum_{k=1}^N b_k z^{-k}}\\
+    &b_1 = e^{j\Omega},\, a_0 = 1\\
+    &\frac{Y(z)}{X(z)} = \frac{1}{1 - e^{j\Omega}z^{-1}}\\
+\end{align*}
+
+Caso $b_1$ fosse real, a transformada poderia ser computada sem uso de aritmética complexa. É possível forçar essa situação multiplicando o denominador por seu conjugado:
+
+\begin{align}
+    \label{eq:Goertzelconj}
+    &\frac{Y(z)}{X(z)} = \frac{1}{1 - e^{j\Omega}z^{-1}} \cdot \frac{1 - e^{-j\Omega}z^{-1}}{1 - e^{-j\Omega}z^{-1}}\\
+    &\frac{Y(z)}{X(z)} = \frac{1 - e^{-j\Omega}z^{-1}}{1 - 2\cos(\Omega)z^{-1} + z^{-2}}\nonumber
+\end{align}
+
+Produziu-se uma cascata de filtros: um filtro IIR real de segunda ordem e um filtro FIR complexo de primeira ordem. Aplicando o filtro IIR antes do FIR, computa-se uma sequência \(s[n]\) até o índice \(N-1\) utilizando somente aritmética real. Em seguida, realiza-se uma única multiplicação complexa sobre os últimos dois índices. Convertendo os filtros para o domínio do tempo, tem-se o seguinte sistema de equações:
+
+\begin{align*}
+    \begin{cases}
+        s[n] &= x[n] - 2\cos(\Omega)s[n-1] + s[n-2]\\
+        y[N-1] &= s[N-1] - e^{-j\Omega}s[N-2]\\
+        e^{j\Omega(N-1)}X(-\Omega) &= y[N-1]
+    \end{cases}
+\end{align*}
+
+Como o interesse é na magnitude da transformada, as relações podem ser ainda mais simplificadas, eliminando o uso de aritmética complexa:
+
+\begin{align*}
+    \begin{cases}
+        s[n] &= x[n] - 2\cos(\Omega)s[n-1] + s[n-2]\\
+        \lvert y[N-1] \rvert^2 &= (s[N-1]-\cos(\Omega)s[N-2])^2 + (\sin(\Omega)s[N-2])^{2}\\
+        \lvert X(-\Omega) \rvert^2 &= \lvert y[N-1] \rvert^2
+    \end{cases}
+\end{align*}
+
+O sistema implementado como descrito é marginalmente estável, pois possuí polos $e^{\pm j \Omega}$, visíveis nos produtos do denominador de \eqref{eq:Goertzelconj}. Isso torna-se um problema para implementações digitais devido à quantização. 
+
+É necessário adicionar um parâmetro $r$ que distância os polos do círculo unitário. Para isso, partindo de \eqref{eq:Goertzelconj}, substitui-se $e^{j\Omega}$ por $re^{j\Omega}$. Com isso a magnitude do polo pode ser controlada.
+
+\begin{align*}
+    &\frac{Y(z)}{X(z)} = \frac{1}{1 - re^{j\Omega}z^{-1}} \cdot \frac{1 - re^{-j\Omega}z^{-1}}{1 - re^{-j\Omega}z^{-1}}\\
+    &\frac{Y(z)}{X(z)} = \frac{1 - re^{-j\Omega}}
+    {1-2rcos(\Omega)z^{-1}+r^2z^{-2}}\\
+\end{align*}
+
+Convertendo o sistema para o domínio do tempo, e calculando a magnitude da transformada como anteriormente.
+
+\begin{align}
+    \label{eq:Goertzelfinal}
+    \begin{cases}
+        s[n] &= x[n] + 2r\cos(\Omega)s[n-1] - r^2s[n-2]\\
+        \lvert y[N-1] \rvert^2 &= (s[N-1] - r\cos(\Omega)s[N-2])^2 + (r\sin(\Omega)s[N-2])^{2}\\
+        \lvert X(-\Omega) \rvert^2 &= \lvert y[N-1] \rvert^2
+    \end{cases}
+\end{align}
+
+
+Dessa forma tomando $r \to 1^{-1}$ o sistema \eqref{eq:Goertzelfinal} torna-se estritamente estável, e pronto para implementação digital.
+
+\subsubsection{Pulseaudio}
+\label{sub:pulseaudio}
+
+O \textit{Pulseaudio} é um servidor de áudio tipicamente distribuído em sistemas que implementam \ac{POSIX} \cite{pulseaudio}. Esse servidor possuí uma \ac{API} pela qual clientes podem configurar, escutar e escrever em saídas/entradas de audio.
+
+\subsubsection{Dear Imgui}
+\label{sub:dear}
+
+A biblioteca \textit{Dear Imgui} implementa a renderização de interfaces gráficas popularmente chamadas de: \ac{GUI}. Utilizada para desenvolvimento em C++, seu foco é performance e simplicidade, com um interface  de uso enxuta, funcionalidades básicas e baixo \textit{overhead} de computação \cite{imgui}. 
+
+A popularidade do \textit{Dear Imgui} levou ao desenvolvimento de múltiplos componentes adicionais para expandir as capacidades da biblioteca. Dentre eles, o \textit{Dear Implot} \cite{implot} expande a biblioteca original permitindo a criação de gráficos em tempo real.

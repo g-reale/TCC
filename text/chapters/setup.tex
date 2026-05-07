@@ -1,0 +1,120 @@
+% !TEX root = ../tcc.tex
+
+\documentclass[a4paper]{ltxdoc}
+\usepackage{lmodern}			% Usa a fonte Latin Modern			
+\usepackage[T1]{fontenc}		% seleção de códigos de fonte.
+\usepackage[utf8]{inputenc}		% determina a codificação utiizada (conversão automática dos acentos)
+\usepackage{hyperref}  			% controla a formação do índice
+\usepackage{parskip}			% espaçamento entre os parágrafos
+\usepackage{microtype} 			% para melhorias de justificação
+\usepackage{morefloats}			% permite mais floats
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs} 
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{graphicx} 
+\usepackage{soul}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{acronym}
+
+% Babel e ajustes
+\usepackage[brazil]{babel}		% idiomas
+\addto\captionsbrazil{
+    %% ajusta nomes padroes do babel
+    \renewcommand{\bibname}{Refer\^encias}
+    \renewcommand{\indexname}{\'Indice}
+    \renewcommand{\listfigurename}{Lista de ilustra\c{c}\~{o}es}
+    \renewcommand{\listtablename}{Lista de tabelas}
+    %% ajusta nomes usados com a macro \autoref
+    \renewcommand{\pageautorefname}{p\'agina}
+    \renewcommand{\sectionautorefname}{se{\c c}\~ao}
+    \renewcommand{\subsectionautorefname}{subse{\c c}\~ao}
+    \renewcommand{\paragraphautorefname}{par\'agrafo}
+    \renewcommand{\subsubsectionautorefname}{subse{\c c}\~ao}
+    \renewcommand{\paragraphautorefname}{subse{\c c}\~ao}
+}  
+
+\usepackage{color}
+\definecolor{thered}{rgb}{0.65,0.04,0.07}
+\definecolor{thegreen}{rgb}{0.06,0.44,0.08}
+\definecolor{thegrey}{gray}{0.5}
+\definecolor{theshade}{rgb}{1,1,0.97}
+\definecolor{theframe}{gray}{0.6}
+\definecolor{blue}{RGB}{41,5,195}
+
+\IfFileExists{listings.sty}{
+  \usepackage{listings}
+\lstset{%
+	language=[LaTeX]TeX,
+	columns=flexible,
+	basicstyle=\ttfamily\small,
+	backgroundcolor=\color{theshade},
+	frame=single,
+	tabsize=2,
+	rulecolor=\color{theframe},
+	title=\lstname,
+	escapeinside={\%*}{*)},
+	breaklines=true,
+	commentstyle=\color{thegrey},
+	keywords=[0]{\fichacatalografica,\errata,\folhadeaprovacao,\dedicatoria,\agradecimentos,\epigrafe,\resumo,\siglas,\simbolos,\citacao,\alineas,\subalineas,\incisos},
+	keywordstyle=[0]\color{thered},
+	keywords=[1]{},
+	keywordstyle=[1]\color{thegreen},
+	breakatwhitespace=true,
+	alsoother={0123456789_},
+	inputencoding=utf8,
+	extendedchars=true,
+	literate={á}{{\'a}}1 {ã}{{\~a}}1 {é}{{\'e}}1 {è}{{\`{e}}}1 {ê}{{\^{e}}}1 {ë}{{\¨{e}}}1 {É}{{\'{E}}}1 {Ê}{{\^{E}}}1 {û}{{\^{u}}}1 {ú}{{\'{u}}}1 {â}{{\^{a}}}1 {à}{{\`{a}}}1 {á}{{\'{a}}}1 {ã}{{\~{a}}}1 {Á}{{\'{A}}}1 {Â}{{\^{A}}}1 {Ã}{{\~{A}}}1 {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1 {õ}{{\~{o}}}1 {ó}{{\'{o}}}1 {ô}{{\^{o}}}1 {Õ}{{\~{O}}}1 {Ó}{{\'{O}}}1 {Ô}{{\^{O}}}1 {î}{{\^{i}}}1 {Î}{{\^{I}}}1 {í}{{\'{i}}}1 {Í}{{\~{Í}}}1,
+}
+\let\verbatim\relax
+ 	\lstnewenvironment{verbatim}[1][]{\lstset{##1}}{}
+}
+
+\usepackage[alf]{abntex2cite}	% citacoes
+
+
+% COMANDOS PROPRIOS
+\newcommand{\abnTeX}{abn\TeX}
+\newcommand{\abnTeXForum}{\url{http://groups.google.com/group/abntex2}}
+\newcommand{\abnTeXSite}{\url{http://www.abntex.net.br/}}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{clry}[thm]{Corollary}
+
+\title{\textbf{A classe \textsf{abntex2}}: \\ \Large{Documentos
+técnicos e científicos brasileiros \\compatíveis com as normas ABNT}}
+
+%   \thanks{Este documento
+%   se referete ao \textsf{abntex2} versão \fileversion,
+%   de \filedate.}
+  
+\author{Lauro César Araujo\\\abnTeXSite} 
+
+\date{\today, v-1.9.6}
+
+\hypersetup{
+		pdftitle={...},
+		pdfauthor={...},
+    	pdfsubject={...}, 
+    	pdfkeywords={...}{...}{...}, 
+		pdfproducer={... -- ...@....com}, 	% producer of the document
+	    pdfcreator={LaTeX with abnTeX2},
+    	colorlinks=true,
+    	linkcolor=blue,
+    	citecolor=blue,
+		urlcolor=blue
+}
+
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+
+\changes{v1.0}{.../.../...}{Versão inicial}
+\changes{...}{...}{...}
