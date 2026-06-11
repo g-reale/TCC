@@ -5,8 +5,9 @@
 #include "Goertzel.hpp"
 #include "Recorder.hpp"
 #include "Utils.hpp"
-#include "WBAS.hpp"
-#include "BAS.hpp"
+#include "WBASS.hpp"
+#include "BASS.hpp"
+#include "FFT.hpp"
 
 #include <mutex>
 #include <string>
@@ -22,12 +23,13 @@
 class BackEnd{
     private:
         static float normalization;
-        static constexpr float decay = 0.99;
+        static constexpr float decay = 0.95;
         static Recorder<BUFFER_SIZE> recorder;
         static std::array<float,BUFFER_SIZE> frame;
         static std::unordered_map<float,Goertzel> analyzers;
-        static BAS bas;
-        static WBAS<BUFFER_SIZE> wbas;
+        static BASS<BUFFER_SIZE> bass;
+        static WBASS<BUFFER_SIZE> wbass;
+        static FFT<BUFFER_SIZE> fft;
         
         static std::atomic<bool> read_names;
         static pa_mainloop * main_loop;
@@ -40,7 +42,14 @@ class BackEnd{
         static void setSource(const std::string& source);
         static std::vector<std::string> querySources();
 
+        enum class strategy_t{
+            BASS,
+            WBASS,
+            FFT,
+        };
+        template<strategy_t strategy>
         static std::pair<float,float> maximum();
+
         static float queryFrequency(float frequency);
         static void update();
         static void createAnalyzer(float frequency);

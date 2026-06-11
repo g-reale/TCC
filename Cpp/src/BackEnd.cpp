@@ -6,8 +6,9 @@ Recorder<BUFFER_SIZE> BackEnd::recorder("");
 array<float,BUFFER_SIZE> BackEnd::frame;
 unordered_map<float,Goertzel> BackEnd::analyzers;
 float BackEnd::normalization;
-BAS BackEnd::bas(0,8e3,10,1,100);
-WBAS<BUFFER_SIZE> BackEnd::wbas;
+BASS<BUFFER_SIZE> BackEnd::bass(0,5e3,10,1,10);
+WBASS<BUFFER_SIZE> BackEnd::wbass;
+FFT<BUFFER_SIZE> BackEnd::fft;
 
 atomic<bool> BackEnd::read_names = false;
 pa_mainloop *BackEnd::main_loop = nullptr;
@@ -122,12 +123,39 @@ float BackEnd::queryFrequency(float frequency){
         return -1;
 }
 
+template<BackEnd::strategy_t strategy>
 pair<float,float> BackEnd::maximum(){
     static Goertzel analizer(0.0f);
-    // float frequency = bas.execute(frame);
-    float frequency = wbas.execute(frame);
-    // float magnitude = analizer.execute(frequency,frame); 
-    float magnitude = 1;
+    
+    static float smoothing = 0;
+    static float smoothing1 = 0;
+    // static float factor = 0.8;
+    // static float factor1 = 0.8;
+    static float factor = 0.0;
+    static float factor1 = 0.0;
+
+    float frequency;
+    float magnitude;
+
+    if constexpr (strategy == strategy_t::WBASS){
+        frequency = wbass.execute(frame);
+        magnitude = analizer.execute(frequency,frame);
+    }
+    else if constexpr (strategy == strategy_t::BASS){
+        frequency = bass.execute(frame);
+        magnitude = analizer.execute(frequency,frame);
+    }
+    if constexpr (strategy == strategy_t::FFT) {
+        tie(frequency, magnitude) = fft.execute(frame);
+    }
+
     normalization = normalization > magnitude ? normalization * decay : magnitude;
-    return pair<float,float>(frequency,1);
+    magnitude = magnitude / normalization;
+    smoothing = smoothing * factor + magnitude * (1-factor);
+    smoothing1 = smoothing1 * factor1 + frequency * (1-factor1);
+    return pair<float,float>(smoothing1,smoothing);
 }
+
+template std::pair<float,float> BackEnd::maximum<BackEnd::strategy_t::WBASS>();
+template std::pair<float,float> BackEnd::maximum<BackEnd::strategy_t::BASS>();
+template std::pair<float,float> BackEnd::maximum<BackEnd::strategy_t::FFT>();

@@ -2,31 +2,15 @@
 #define FILTER_HPP
 
 #include <array>
+#include <string>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <assert.h>
 #include <algorithm>
+#include <initializer_list>
 
-template<size_t N, typename datatype>
-class Circular{
-    private:
-        std::array<datatype,N> memory;
-        size_t index = 0;
-    public:
-
-        Circular() = default;
-
-        void push(datatype sample){
-            memory[index] = sample;
-            index = (index + 1) % memory.size();
-        }
-
-        inline float operator[](size_t i) const {
-            return memory[(memory.size() + index - i - 1) % memory.size()];
-        }
-
-        void clear(){
-            std::fill(memory.begin(),memory.end(),0);
-        }
-};
+#include "Circular.hpp"
 
 template<size_t N, size_t M, typename filtertype, typename sampletype, typename resulttype>
 class Filter{
@@ -38,18 +22,11 @@ class Filter{
     public:
         Filter() = default;
         Filter(std::array<filtertype,N> fir, std::array<filtertype,M> iir) : fir(fir), iir(iir) {};
+        Filter(const std::string& path);
         void clear();
-        resulttype execute(sampletype sample);
-};
-
-template<size_t order, typename filtertype, typename sampletype, typename resulttype>
-class Sos{
-    private:
-        std::array<Filter<3,2,filtertype,sampletype,resulttype>,order> biquads;
-    public:
-        Sos(std::array<std::pair<std::array<filtertype,3>,std::array<filtertype,2>>,order> coefficients);
-        void clear();
-        resulttype execute(sampletype sample);
+        inline resulttype execute(sampletype sample);
+        template<size_t K>
+        inline void execute(const std::array<sampletype,K>& samples, std::array<resulttype,K>& filtered, size_t decimation = 1);
 };
 
 #include "../templates/Filter.tpp"

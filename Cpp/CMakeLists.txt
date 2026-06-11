@@ -18,6 +18,18 @@ find_library(PULSEAUDIO_LIBRARY
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLFW REQUIRED glfw3)
+find_package(PkgConfig REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(
+    liquid
+    GIT_REPOSITORY https://github.com/jgaeddert/liquid-dsp.git
+    GIT_TAG        v1.7.0
+    )
+set(BUILD_AUTOTESTS  OFF CACHE INTERNAL "Disable building liquid tests")
+set(BUILD_BENCHMARKS OFF CACHE INTERNAL "Disable building liquid benchmarks")
+set(BUILD_EXAMPLES   OFF CACHE INTERNAL "Disable building liquid examples")
+FetchContent_MakeAvailable(liquid)
 
 set(IIMGUI
         imgui
@@ -51,9 +63,15 @@ set(
         glad/src/glad.c
 )
 
-add_executable(${PROJECT_NAME} main.cpp src/Goertzel.cpp src/BackEnd.cpp src/FrontEnd.cpp src/BAS.cpp ${SRCIMGUI} ${SRCGLAD} ${SRCIMPLOT})
-target_link_libraries(${PROJECT_NAME} PRIVATE pulse-simple pulse ${GLFW_LIBRARIES} OpenGL::GL)
+add_executable(${PROJECT_NAME} main.cpp src/Goertzel.cpp src/BackEnd.cpp src/FrontEnd.cpp src/Sos.cpp ${SRCIMGUI} ${SRCGLAD} ${SRCIMPLOT})
+target_link_libraries(${PROJECT_NAME} PRIVATE pulse-simple pulse ${GLFW_LIBRARIES} OpenGL::GL liquid)
 target_include_directories(${PROJECT_NAME} PRIVATE include templates ${PULSEAUDIO_INCLUDE_DIRS} ${IIMGUI} ${GLFW_INCLUDE_DIRS} ${IIMPLOT})
+
+add_executable(testbench testbench.cpp src/Goertzel.cpp)
+target_link_libraries(testbench PRIVATE liquid)
+target_include_directories(testbench PRIVATE include templates)
+target_compile_options(testbench PRIVATE -Wall -Wextra -O3 -march=native)
+
 
 if(PERFORMANCE)
         target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -O3 -march=native)

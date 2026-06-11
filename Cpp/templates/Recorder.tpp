@@ -35,10 +35,10 @@ void Recorder<N>::reset(const std::string & source){
     
     pulse_audio_handle = pa_simple_new(
         nullptr,
-        "BAS",
+        "BASS",
         PA_STREAM_RECORD,
         source.empty() ? nullptr : source.data(),
-        "BAS input",
+        "BASS input",
         &sample_spec,
         nullptr,
         &attr,
@@ -74,18 +74,17 @@ inline float Recorder<N>::record(){
 template<size_t N>
 inline void Recorder<N>::record(std::array<float,N> & frame){
     
-    std::copy(
-        this->frame.begin(),
-        this->frame.end(),
-        frame.begin()
-    );
+    // std::copy(
+    //     this->frame.begin(),
+    //     this->frame.end(),
+    //     frame.begin()
+    // );
 
     pa_simple_read(
         pulse_audio_handle,
-        this->frame.data(),
+        frame.data(),
         N * sizeof(float),
         nullptr
     );
 
-    index = 0;
 }

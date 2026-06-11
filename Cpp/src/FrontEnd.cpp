@@ -408,12 +408,28 @@ void FrontEnd::Application::showOverallVisualizationPage() {
                 ImPlot::PopStyleVar();
                 ImPlot::PopStyleColor();
 
-                // Adiciona o pico do espectro
-                auto [frequency, magnitude] = BackEnd::maximum();
+                auto [freq_fft, mag_fft]   = BackEnd::maximum<BackEnd::strategy_t::FFT>();
+                auto [freq_bass, mag_bass] = BackEnd::maximum<BackEnd::strategy_t::BASS>();
+                auto [freq_wbass, mag_wbass] = BackEnd::maximum<BackEnd::strategy_t::WBASS>();
 
-                ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 255, 0, 255));  // yellow stem
+                // FFT - amarelo
+                ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255,255,0,255));
                 ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 3.0f);
-                ImPlot::PlotStems("pico", &frequency, &magnitude, 1);
+                ImPlot::PlotStems("FFT", &freq_fft, &mag_fft, 1);
+                ImPlot::PopStyleVar();
+                ImPlot::PopStyleColor();
+
+                // BASS - verde
+                ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0,255,0,255));
+                ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 3.0f);
+                ImPlot::PlotStems("BASS", &freq_bass, &mag_bass, 1);
+                ImPlot::PopStyleVar();
+                ImPlot::PopStyleColor();
+
+                // WBASS - azul
+                ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0,128,255,255));
+                ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 3.0f);
+                ImPlot::PlotStems("WBASS", &freq_wbass, &mag_wbass, 1);
                 ImPlot::PopStyleVar();
                 ImPlot::PopStyleColor();
             }

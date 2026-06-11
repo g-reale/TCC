@@ -1,5 +1,5 @@
 template<size_t N>
-float BAS::nthArea(const std::array<float,N> & samples, float alpha, float beta){
+float BASS<N>::nthArea(const std::array<float,N> & samples, float alpha, float beta){
     
     float area = 0;
     float lower = alpha;
@@ -16,11 +16,11 @@ float BAS::nthArea(const std::array<float,N> & samples, float alpha, float beta)
 }
 
 template<size_t N>
-float BAS::execute(const std::array<float,N>& samples){
+float BASS<N>::execute(const std::array<float,N>& samples){
     
     std::array<float,N> y;
     for(float i = 1; i <= samples.size(); i++)
-        y[i-1] = - samples[i-1] / i;                           //don´t forget the j implications
+        y[i-1] = - samples[i-1] / i;
         
     float upper = beta;
     float lower = alpha;
@@ -29,16 +29,12 @@ float BAS::execute(const std::array<float,N>& samples){
 
     for(size_t i = 0; i < iterations; i++){
         a_1 = nthArea(y,lower,lower + (upper - lower)/2);
-    
-        // std::cout << i << ": whole(" << lower << "," << upper << "): " << a_0 << " left(" << lower << "," << upper/2 << "): " << a_1 << " rigth(" << upper/2 << "," << upper <<"): " << a_0 - a_1 << std::endl;
-
+        
         if(a_0 - a_1 > a_1){
-            // std::cout << "\trigth wins" << std::endl;
             lower += (upper - lower)/2;
             a_0 = a_0 - a_1;
         }
         else{
-            // std::cout << "\tleft wins" << std::endl;
             upper -= (upper - lower)/2;
             a_0 = a_1;
         }
@@ -47,6 +43,19 @@ float BAS::execute(const std::array<float,N>& samples){
             break;
     }
 
-    // std::cout << "end(" << lower << "," << upper << ")" << std::endl;
     return (lower + upper)/2;
+}
+
+template<size_t N>
+BASS<N>::BASS(float alpha, float beta, size_t iterations, float power, float trust) : analizer(0){
+    set(alpha,beta,iterations,power,trust);
+}
+
+template<size_t N>
+void BASS<N>::set(float alpha, float beta, size_t iterations, float power, float trust){
+    this->alpha = alpha;
+    this->beta = beta;
+    this->iterations = iterations;
+    this->power = power;
+    this->trust = trust;
 }
